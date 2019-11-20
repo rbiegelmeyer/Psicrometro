@@ -1,6 +1,7 @@
 import os
 import glob
 import time
+from  datetime import datetime
 import math
 
 import sender
@@ -47,17 +48,16 @@ data = {
     'humidityBMP' : 0.0
 }
 
+# f = open('tbs.csv', 'a')
+# g = open('tbu.csv', 'a')
+# h1 = open('humidity.csv', 'a')
+# h2 = open('humidityBMP.csv', 'a')
+
+arquivo = open('./data.csv','a')
+
 while True:
-    # for device_folder in glob.glob(base_dir + '28*'):
-    #     device_file = device_folder+ '/w1_slave'
-    #     print (device_file)
-
-
+    # Get values
     temperature,pressure,humidity = bme280.readBME280All()
-
-    # print ("Temperature : ", temperature, "C")
-    # print ("Pressure : ", pressure, "hPa")
-    # print ("Humidity : ", humidityBMP, "%")
 
     data['tempBMP'] = temperature
     data['pressure'] = round(pressure/10.0,2)
@@ -74,13 +74,30 @@ while True:
         data['temp2'] = 0.0
         print("Wet bulb have a problem! ")
 
-    # data['humidity'] = psychropy.Rel_hum3(25.0,19.0,data['pressure'])
-    # data['humidity'] = psychropy.Rel_hum3(data['temp1'],data['temp2'],data['pressure'])
     data['humidity'] = round(psicrometro.ur(data['temp1'],data['temp2'],data['pressure']),2)
+
+
+    # f.write(str(data['temp1']) + ';')
+    # g.write(str(data['temp2']) + ';')
+    # h1.write(str(data['humidity']) + ';')
+    # h2.write(str(data['humidityBMP']) + ';')
+
+    arquivo = open('./data.csv','a')
+
+    # arquivo.write(str(datetime.now()) + ',')
+    arquivo.write(str(int(time.time())) + ',')
+    arquivo.write(str(data['temp1']) + ',')
+    arquivo.write(str(data['temp2']) + ',')
+    arquivo.write(str(data['humidity']) + ',')
+    arquivo.write(str(data['humidityBMP']))
+    arquivo.write('\n')
+
+    arquivo.close()
 
     # Ponto de Orvalho
     # print(round(psicrometro.Dew_point(data['temp1'],data['temp2'],data['pressure']),2))
 
+    # Send values to socketio server
     sender.sendData(data)
 
     time.sleep(0.1)
